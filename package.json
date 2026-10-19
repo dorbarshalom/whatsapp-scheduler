@@ -1,0 +1,12 @@
+{
+  "name": "whatsapp-scheduler",
+  "version": "1.0.0",
+  "description": "Personal WhatsApp Web message scheduler for business morning delivery",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": ["whatsapp", "scheduler", "chrome-extension"],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Scheduler</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="compose" role="tab" aria-selected="true" id="tab-compose">
+        <span>Compose</span>
+      </button>
+      <button class="tab-btn" data-tab="queue" role="tab" aria-selected="false" id="tab-queue">
+        <span>Queue</span>
+        <span class="badge" id="badge-queue" hidden>0</span>
+      </button>
+      <button class="tab-btn" data-tab="due" role="tab" aria-selected="false" id="tab-due">
+        <span>Due</span>
+        <span class="badge badge-urgent" id="badge-due" hidden>0</span>
+      </button>
+      <button class="tab-btn" data-tab="history" role="tab" aria-selected="false" id="tab-history">
+        <span>History</span>
+      </button>
+    </nav>
+
+    <!-- Sub-header with timezone info -->
+    <div class="sub-header-bar">
+      <span class="tz-label">Timezone:</span>
+      <span class="timezone-badge" title="Target business calendar">Asia/Jerusalem (Sun–Thu • 08:00)</span>
+    </div>
+
+    <!-- Tab Panels -->
+    <main class="content-area">
+      <!-- 1. Compose View -->
+      <section id="view-compose" class="tab-view active" role="tabpanel" aria-labelledby="tab-compose">
+        <form id="compose-form" class="compose-form">
+          <!-- Recipient Group -->
+          <div class="form-group">
+            <div class="contact-header-row">
+              <label for="contact-select" class="form-label">Saved Contacts</label>
+              <button type="button" id="btn-delete-contact" class="btn-action-link text-danger" title="Remove selected contact from saved list" hidden>Delete</button>
+            </div>
+            <select id="contact-select" class="form-select">
+              <option value="">— Choose a saved contact —</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="recipient-phone" class="form-label">Recipient Phone (E.164)</label>
+            <div class="input-with-hint">
+              <input 
+                type="tel" 
+                id="recipient-phone" 
+                name="recipientPhone"
+                placeholder="+972 50 123 4567" 
+                required 
+                autocomplete="off"
+              />
+            </div>
+            <p class="form-help">Include country code (e.g. +972 for Israel). Verified before send.</p>
+          </div>
+
+          <div class="form-group">
+            <div class="label-with-action">
+              <label for="recipient-name" class="form-label">Contact Name (Optional)</label>
+              <button type="button" id="btn-save-contact" class="btn-action-link" title="Save this contact for future use">💾 Save Contact</button>
+            </div>
+            <input 
+              type="text" 
+              id="recipient-name" 
+              name="recipientName"
+              placeholder="e.g. Avi Cohen" 
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- Message Group -->
+          <div class="form-group">
+            <div class="label-with-counter">
+              <label for="message-text" class="form-label">Message</label>
+              <span id="char-counter" class="char-counter">0 chars</span>
+            </div>
+            <textarea 
+              id="message-text" 
+              name="messageText"
+              rows="4" 
+              placeholder="Type your message here..."
+            ></textarea>
+          </div>
+
+          <!-- Drag & Drop Attachments Zone -->
+          <div class="form-group">
+            <label class="form-label">Attachments</label>
+            <div class="file-drop-zone" id="file-drop-zone" tabindex="0" role="button" aria-label="Drop files here or click to browse">
+              <input type="file" id="file-input" multiple class="file-input-hidden" />
+              <div class="drop-zone-content">
+                <svg class="drop-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                </svg>
+                <div class="drop-zone-text">
+                  <span class="drop-prompt">Drag & drop files here, or <span class="browse-link">browse</span></span>
+                  <span class="drop-subtext">Images, PDFs, documents, audio (max 15MB total)</span>
+                </div>
+              </div>
+            </div>
+            <!-- Attached Files Preview List -->
+            <div id="attachments-preview-list" class="attachments-preview-list" hidden></div>
+          </div>
+
+          <!-- Scheduling Options (Assumes Next Business Morning; toggle for custom date & time) -->
+          <div class="form-group schedule-compact-card">
+            <div class="custom-toggle-row">
+              <span class="custom-toggle-label">Custom date & time</span>
+              <label class="switch" for="custom-schedule-toggle">
+                <input type="checkbox" id="custom-schedule-toggle" name="customSchedule" />
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <!-- Custom DateTime input (hidden when toggle is off) -->
+            <div id="custom-datetime-container" class="custom-datetime-container" hidden>
+              <input type="datetime-local" id="custom-datetime" name="customDatetime" />
+            </div>
+          </div>
+
+          <!-- Delivery Preview Notice -->
+          <div class="delivery-preview" id="delivery-preview-box">
+            <div class="preview-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="preview-text">
+              <span class="preview-label">Calculated Delivery:</span>
+              <strong id="preview-timestamp">Calculating...</strong>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btn-schedule">
+              Schedule Message
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-save-draft">
+              Save Draft
+            </button>
+            <button type="button" class="btn btn-ghost" id="btn-clear">
+              Clear
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 2. Queue View -->
+      <section id="view-queue" class="tab-view" role="tabpanel" aria-labelledby="tab-queue" hidden>
+        <div class="section-header">
+          <h2>Scheduled Queue</h2>
+          <span class="subtext">Messages queued for upcoming business hours</span>
+        </div>
+        <div id="queue-list" class="message-list">
+          <div class="empty-state">
+            <p>No scheduled messages in the queue.</p>
+            <button class="btn btn-sm btn-secondary" data-switch-tab="compose">Compose a Message</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Due Messages View -->
+      <section id="view-due" class="tab-view" role="tabpanel" aria-labelledby="tab-due" hidden>
+        <!-- Auto-send toggle at top of Due tab: no subtitle, toggle to the right of text -->
+        <div class="due-auto-send-bar">
+          <span class="due-auto-send-label">⚡ Auto-send when due</span>
+          <label class="switch" for="auto-send-toggle">
+            <input type="checkbox" id="auto-send-toggle" name="autoSend" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div class="section-header">
+          <h2>Due for Review</h2>
+          <span class="subtext">Review and manually confirm sending to WhatsApp Web</span>
+        </div>
+        <div id="due-list" class="message-list">
+          <div class="empty-state">
+            <p>No messages currently overdue for delivery.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. History View -->
+      <section id="view-history" class="tab-view" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <div class="section-header">
+          <h2>Message History</h2>
+          <span class="subtext">Past deliveries, drafts, and cancellations</span>
+        </div>
+        <div id="history-list" class="message-list">
+          <div class="empty-state">
+            <p>No history records available yet.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer status -->
+    <footer class="app-footer">
+      <span class="stage-tag">Local Persistence & Queue Active</span>
+    </footer>
+  </div>
+
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

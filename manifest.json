@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp Scheduler",
+  "version": "1.1.0",
+  "description": "Schedule messages on WhatsApp Web for the next business morning or custom times.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "sidePanel",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "WhatsApp Scheduler"
+  },
+  "side_panel": {
+    "default_path": "src/ui/panel.html"
+  },
+  "icons": {
+    "16": "src/icons/icon-16.png",
+    "48": "src/icons/icon-48.png",
+    "128": "src/icons/icon-128.png"
+  }
+}
